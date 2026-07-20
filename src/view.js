@@ -1,4 +1,4 @@
-import { COLS, ROWS, HEAD_PAD, BODY_PAD, FOCUS_DELAY } from './constants.js'
+import { COLS, ROWS, FOCUS_DELAY } from './constants.js'
 import { getLeaderboard } from './api.js'
 
 export class GameView {
@@ -143,10 +143,9 @@ export class GameView {
   }
 
   drawSnake(ctx, game, t, cellSize, offsetX, offsetY) {
-    game.snake.forEach((seg, i) => {
-      const isHead = i === 0
-      const pad = isHead ? HEAD_PAD : BODY_PAD
+    const lastIdx = game.snake.length - 1
 
+    game.snake.forEach((seg, i) => {
       let px, py
       if (game.prevSnake && game.prevSnake[i]) {
         const prev = game.prevSnake[i]
@@ -157,38 +156,96 @@ export class GameView {
         py = seg.y
       }
 
-      ctx.shadowColor = isHead ? '#e94560' : '#4ecca3'
-      ctx.shadowBlur = cellSize * 0.15
-      ctx.fillStyle = isHead ? '#e94560' : (i % 2 === 0 ? '#4ecca3' : '#35b080')
-      ctx.fillRect(
-        offsetX + px * cellSize + pad,
-        offsetY + py * cellSize + pad,
-        cellSize - pad * 2,
-        cellSize - pad * 2,
-      )
-      ctx.shadowBlur = 0
+      const x = offsetX + px * cellSize
+      const y = offsetY + py * cellSize
 
-      if (isHead) {this.drawSnakeEyes(ctx, game, px, py, cellSize, offsetX, offsetY)}
+      if (i === 0) {
+        this.drawSnakeHead(ctx, x, y, cellSize, game.direction)
+      } else if (i === lastIdx) {
+        this.drawSnakeTail(ctx, x, y, cellSize)
+      } else {
+        this.drawSnakeBody(ctx, x, y, cellSize, i)
+      }
     })
   }
 
-  drawSnakeEyes(ctx, game, px, py, cellSize, offsetX, offsetY) {
-    ctx.fillStyle = '#fff'
-    const eyeSize = Math.max(2, cellSize * 0.12)
-    const cx = offsetX + px * cellSize + cellSize / 2
-    const cy = offsetY + py * cellSize + cellSize / 2
-    const off = cellSize * 0.2
-    if (game.direction === 'RIGHT' || game.direction === 'LEFT') {
-      const xOff = game.direction === 'RIGHT' ? off : -off
-      ctx.beginPath()
-      ctx.arc(cx + xOff - eyeSize, cy - off, eyeSize, 0, Math.PI * 2)
-      ctx.arc(cx + xOff - eyeSize, cy + off, eyeSize, 0, Math.PI * 2)
+  drawSnakeHead(ctx, x, y, cellSize, direction) {
+    const pad = cellSize * 0.08
+    const r = cellSize * 0.28
+
+    ctx.shadowColor = '#e94560'
+    ctx.shadowBlur = cellSize * 0.2
+    ctx.fillStyle = '#e94560'
+    ctx.beginPath()
+    ctx.roundRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2, r)
+    ctx.fill()
+    ctx.shadowBlur = 0
+
+    this.drawSnakeEyes(ctx, x, y, cellSize, direction)
+  }
+
+  drawSnakeTail(ctx, x, y, cellSize) {
+    const pad = cellSize * 0.18
+    const r = cellSize * 0.15
+
+    ctx.shadowColor = '#2d8a6e'
+    ctx.shadowBlur = cellSize * 0.08
+    ctx.fillStyle = '#2d8a6e'
+    ctx.beginPath()
+    ctx.roundRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2, r)
+    ctx.fill()
+    ctx.shadowBlur = 0
+  }
+
+  drawSnakeBody(ctx, x, y, cellSize, index) {
+    const pad = cellSize * 0.1
+    const r = cellSize * 0.2
+    const color = index % 2 === 0 ? '#4ecca3' : '#3db88b'
+
+    ctx.shadowColor = '#4ecca3'
+    ctx.shadowBlur = cellSize * 0.08
+    ctx.fillStyle = color
+    ctx.beginPath()
+    ctx.roundRect(x + pad, y + pad, cellSize - pad * 2, cellSize - pad * 2, r)
+    ctx.fill()
+    ctx.shadowBlur = 0
+  }
+
+  drawSnakeEyes(ctx, x, y, cellSize, direction) {
+    const eyeSize = Math.max(3, cellSize * 0.14)
+    const pupilSize = Math.max(1.5, eyeSize * 0.55)
+    const cx = x + cellSize / 2
+    const cy = y + cellSize / 2
+    const off = cellSize * 0.18
+
+    let e1x, e1y, e2x, e2y
+    if (direction === 'RIGHT') {
+      e1x = cx + off; e1y = cy - off
+      e2x = cx + off; e2y = cy + off
+    } else if (direction === 'LEFT') {
+      e1x = cx - off; e1y = cy - off
+      e2x = cx - off; e2y = cy + off
+    } else if (direction === 'DOWN') {
+      e1x = cx - off; e1y = cy + off
+      e2x = cx + off; e2y = cy + off
     } else {
-      const yOff = game.direction === 'DOWN' ? off : -off
-      ctx.beginPath()
-      ctx.arc(cx - off, cy + yOff - eyeSize, eyeSize, 0, Math.PI * 2)
-      ctx.arc(cx + off, cy + yOff - eyeSize, eyeSize, 0, Math.PI * 2)
+      e1x = cx - off; e1y = cy - off
+      e2x = cx + off; e2y = cy - off
     }
+
+    ctx.fillStyle = '#fff'
+    ctx.beginPath()
+    ctx.arc(e1x, e1y, eyeSize, 0, Math.PI * 2)
+    ctx.arc(e2x, e2y, eyeSize, 0, Math.PI * 2)
+    ctx.fill()
+
+    ctx.fillStyle = '#111'
+    const pupilOff = cellSize * 0.025
+    const dx = direction === 'RIGHT' ? pupilOff : direction === 'LEFT' ? -pupilOff : 0
+    const dy = direction === 'DOWN' ? pupilOff : direction === 'UP' ? -pupilOff : 0
+    ctx.beginPath()
+    ctx.arc(e1x + dx, e1y + dy, pupilSize, 0, Math.PI * 2)
+    ctx.arc(e2x + dx, e2y + dy, pupilSize, 0, Math.PI * 2)
     ctx.fill()
   }
 

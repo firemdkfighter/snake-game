@@ -52,11 +52,10 @@ export class InputHandler {
 
     const keyMap = {
       ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT',
-      w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT',
-      W: 'UP', S: 'DOWN', A: 'LEFT', D: 'RIGHT',
+      KeyW: 'UP', KeyS: 'DOWN', KeyA: 'LEFT', KeyD: 'RIGHT',
     }
 
-    const dir = keyMap[e.key]
+    const dir = keyMap[e.code]
     if (dir) {
       e.preventDefault()
       game.setDirection(dir)
