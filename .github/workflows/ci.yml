@@ -9,13 +9,10 @@ on:
 jobs:
   lint-and-build:
     runs-on: ubuntu-latest
+    container:
+      image: node:22-alpine
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
 
       - run: npm ci
 
@@ -25,6 +22,9 @@ jobs:
 
   docker:
     runs-on: ubuntu-latest
+    container:
+      image: docker:28-cli
+      options: --volume /var/run/docker.sock:/var/run/docker.sock
     steps:
       - uses: actions/checkout@v4
 
