@@ -1,3 +1,20 @@
+:root {
+  --color-bg: #0f0f23;
+  --color-dark: #1a1a2e;
+  --color-grid: #16213e;
+  --color-accent: #e94560;
+  --color-green: #4ecca3;
+  --color-green-dark: #35b080;
+  --color-gold: #ffd700;
+  --color-gold-light: #ffed4a;
+  --color-silver: #c0c0c0;
+  --color-bronze: #cd7f32;
+  --color-white: #fff;
+  --color-text-dim: rgba(255, 255, 255, 0.5);
+  --color-text-muted: rgba(255, 255, 255, 0.7);
+  --color-overlay: rgba(15, 15, 35, 0.85);
+}
+
 *, *::before, *::after {
   margin: 0;
   padding: 0;
@@ -8,7 +25,7 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: #0f0f23;
+  background: var(--color-bg);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   user-select: none;
   -webkit-user-select: none;
@@ -53,13 +70,13 @@ html, body {
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-dim);
 }
 
 #score-value, #high-score-value {
   font-size: 28px;
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white);
   font-variant-numeric: tabular-nums;
 }
 
@@ -75,7 +92,7 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  background: rgba(15, 15, 35, 0.85);
+  background: var(--color-overlay);
   z-index: 20;
   padding: 24px;
 }
@@ -83,7 +100,7 @@ html, body {
 .overlay h1 {
   font-size: clamp(36px, 10vw, 64px);
   font-weight: 800;
-  color: #fff;
+  color: var(--color-white);
   letter-spacing: 2px;
 }
 
@@ -99,8 +116,8 @@ html, body {
   padding: 14px 48px;
   font-size: clamp(16px, 3vw, 20px);
   font-weight: 600;
-  color: #fff;
-  background: #e94560;
+  color: var(--color-white);
+  background: var(--color-accent);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -128,14 +145,14 @@ html, body {
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  color: var(--color-white);
   outline: none;
   width: 200px;
   font-family: inherit;
 }
 
 .overlay input:focus {
-  border-color: #e94560;
+  border-color: var(--color-accent);
 }
 
 .overlay input::placeholder {
@@ -154,34 +171,26 @@ html, body {
   white-space: nowrap;
 }
 
-#leaderboard,
-#leaderboard-pause,
-#leaderboard-start {
+.lb-section {
   width: 100%;
   max-width: 320px;
 }
 
-#leaderboard h2,
-#leaderboard-pause h2,
-#leaderboard-start h2 {
+.lb-section h2 {
   font-size: clamp(18px, 4vw, 24px);
   font-weight: 700;
-  color: #fff;
+  color: var(--color-white);
   text-align: center;
   margin-bottom: 8px;
   letter-spacing: 1px;
 }
 
-#leaderboard-list,
-#pause-leaderboard-list,
-#start-leaderboard-list {
+.lb-section ol {
   list-style: none;
   counter-reset: leaderboard;
 }
 
-#leaderboard-list li,
-#pause-leaderboard-list li,
-#start-leaderboard-list li {
+.lb-section li {
   counter-increment: leaderboard;
   display: flex;
   align-items: center;
@@ -192,9 +201,7 @@ html, body {
   color: rgba(255, 255, 255, 0.85);
 }
 
-#leaderboard-list li::before,
-#pause-leaderboard-list li::before,
-#start-leaderboard-list li::before {
+.lb-section li::before {
   content: counter(leaderboard);
   width: 22px;
   height: 22px;
@@ -205,34 +212,26 @@ html, body {
   font-size: 12px;
   font-weight: 700;
   background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-dim);
   flex-shrink: 0;
 }
 
-#leaderboard-list li:nth-child(1)::before,
-#pause-leaderboard-list li:nth-child(1)::before,
-#start-leaderboard-list li:nth-child(1)::before {
-  background: #ffd700;
+.lb-section li:nth-child(1)::before {
+  background: var(--color-gold);
   color: #000;
 }
 
-#leaderboard-list li:nth-child(2)::before,
-#pause-leaderboard-list li:nth-child(2)::before,
-#start-leaderboard-list li:nth-child(2)::before {
-  background: #c0c0c0;
+.lb-section li:nth-child(2)::before {
+  background: var(--color-silver);
   color: #000;
 }
 
-#leaderboard-list li:nth-child(3)::before,
-#pause-leaderboard-list li:nth-child(3)::before,
-#start-leaderboard-list li:nth-child(3)::before {
-  background: #cd7f32;
+.lb-section li:nth-child(3)::before {
+  background: var(--color-bronze);
   color: #000;
 }
 
-#leaderboard-list .lb-name,
-#pause-leaderboard-list .lb-name,
-#start-leaderboard-list .lb-name {
+.lb-section .lb-name {
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -240,44 +239,24 @@ html, body {
   white-space: nowrap;
 }
 
-#leaderboard-list .lb-score,
-#pause-leaderboard-list .lb-score,
-#start-leaderboard-list .lb-score {
+.lb-section .lb-score {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--color-white);
 }
 
-#leaderboard-list .lb-current,
-#pause-leaderboard-list .lb-current,
-#start-leaderboard-list .lb-current {
+.lb-section .lb-current {
   background: rgba(233, 69, 96, 0.2);
 }
 
-#leaderboard-list .lb-current::before,
-#pause-leaderboard-list .lb-current::before,
-#start-leaderboard-list .lb-current::before {
-  background: #e94560;
-  color: #fff;
-}
-
-.lb-section {
-  width: 100%;
-  max-width: 320px;
-}
-
-.lb-section h2 {
-  font-size: clamp(18px, 4vw, 24px);
-  font-weight: 700;
-  color: #fff;
-  text-align: center;
-  margin-bottom: 8px;
-  letter-spacing: 1px;
+.lb-section .lb-current::before {
+  background: var(--color-accent);
+  color: var(--color-white);
 }
 
 .controls-hint {
   font-size: clamp(12px, 2vw, 14px);
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--color-text-dim);
 }
 
 kbd {
@@ -288,7 +267,7 @@ kbd {
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .hidden {

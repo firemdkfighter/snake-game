@@ -21,10 +21,9 @@
       </div>
     </div>
 
-    <div id="game-over-overlay" class="overlay hidden">
-      <h1>Game Over</h1>
-      <p>Score: <span id="final-score">0</span></p>
-      <p>Best: <span id="final-best">0</span></p>
+    <div id="overlay" class="overlay">
+      <h1 id="overlay-title">Snake</h1>
+      <p id="overlay-score-row" class="hidden">Score: <span id="overlay-score">0</span> &middot; Best: <span id="overlay-best">0</span></p>
       <div id="name-input-wrapper" class="hidden">
         <p>New high score! Enter your name:</p>
         <div class="name-input-row">
@@ -32,32 +31,12 @@
           <button id="save-score-btn">Save</button>
         </div>
       </div>
-      <div id="leaderboard" class="hidden">
+      <div class="lb-section">
         <h2>Leaderboard</h2>
-        <ol id="leaderboard-list"></ol>
+        <ol id="overlay-leaderboard-list"></ol>
       </div>
-      <button id="restart-btn">Play Again</button>
-    </div>
-
-    <div id="pause-overlay" class="overlay hidden">
-      <h1>Paused</h1>
-      <p>Score: <span id="pause-score">0</span></p>
-      <p>Best: <span id="pause-best">0</span></p>
-      <div id="leaderboard-pause">
-        <h2>Leaderboard</h2>
-        <ol id="pause-leaderboard-list"></ol>
-      </div>
-      <p>Press <kbd>Esc</kbd> to resume</p>
-    </div>
-
-    <div id="start-overlay" class="overlay">
-      <h1>Snake</h1>
-      <div id="leaderboard-start">
-        <h2>Leaderboard</h2>
-        <ol id="start-leaderboard-list"></ol>
-      </div>
-      <p class="controls-hint">Arrow keys / WASD to move — <kbd>Esc</kbd> to pause</p>
-      <button id="start-btn">Start Game</button>
+      <p id="overlay-hint" class="controls-hint">Arrow keys / WASD to move &mdash; <kbd>Esc</kbd> to pause</p>
+      <button id="overlay-action-btn">Start Game</button>
     </div>
   </div>
   <script type="module" src="/src/main.js"></script>

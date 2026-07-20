@@ -102,4 +102,7 @@ When `start()` is called (from game over or start screen), `prevSnake` is reset 
 
 - `.gitignore` excludes: `node_modules/`, `dist/`, `data/`, `*.log`
 - The `data/` directory is a bind-mounted Docker volume — never commit it.
+- Commit after each completed task, but only commit what was intended (never secrets or generated files).
+- Before committing, review `git status`, `git diff`, and recent history (`git log --oneline -10`).
+- Stage only intended files — never commit secrets or generated files.
 - Write concise commit messages matching the repo style.
