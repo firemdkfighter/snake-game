@@ -128,7 +128,7 @@ export class GameView {
     overlay.classList.remove('hidden')
     document.getElementById('overlay-title').textContent = 'Snake'
     document.getElementById('overlay-score-row').classList.add('hidden')
-    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &mdash; <kbd>Esc</kbd> to pause'
+    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to start'
     const btn = document.getElementById('overlay-action-btn')
     btn.textContent = 'Start Game'
     btn.classList.remove('hidden')
@@ -151,7 +151,7 @@ export class GameView {
     document.getElementById('overlay-score-row').classList.remove('hidden')
     document.getElementById('overlay-score').textContent = String(score)
     document.getElementById('overlay-best').textContent = String(highScore)
-    document.getElementById('overlay-hint').innerHTML = 'Press <kbd>Esc</kbd> to resume'
+    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to resume'
     document.getElementById('overlay-action-btn').classList.add('hidden')
     this.showNameInput(false)
   }
@@ -164,7 +164,7 @@ export class GameView {
     document.getElementById('overlay-score').textContent = String(score)
     document.getElementById('overlay-best').textContent = String(highScore)
     this.renderLeaderboard('overlay-leaderboard-list', entries)
-    document.getElementById('overlay-hint').innerHTML = ''
+    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to play again'
     const btn = document.getElementById('overlay-action-btn')
     btn.textContent = 'Play Again'
     btn.classList.remove('hidden')
