@@ -1,19 +1,15 @@
-# Stage 1: Build stage
-FROM node:18-alpine AS builder
-
+FROM node:22-alpine AS builder
 WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm install
+COPY . .
+RUN npm run build
 
-# Copy index.html
-COPY index.html ./
-
-# Stage 2: Final runtime image
-FROM nginx:alpine
-
-# Copy built files from builder stage
-COPY --from=builder /app /usr/share/nginx/html
-
-# Expose port 80
+FROM node:22-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY server.js .
+RUN npm install express
 EXPOSE 80
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+VOLUME /data
+CMD ["node", "server.js"]
