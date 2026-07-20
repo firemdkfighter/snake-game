@@ -8,6 +8,7 @@ export class GameView {
     this.game = null
     this._inputMode = 'keyboard'
     this._activeHint = null
+    this._pendingName = ''
     this.setupResize()
     this.resize()
   }
@@ -152,7 +153,6 @@ export class GameView {
     btn.classList.remove('hidden')
     if (qualifies) {
       this.showNameInput(true)
-      document.getElementById('name-input').value = ''
       setTimeout(() => document.getElementById('name-input').focus(), FOCUS_DELAY)
     } else {
       this.showNameInput(false)
@@ -168,7 +168,14 @@ export class GameView {
   }
 
   showNameInput(show) {
-    document.getElementById('name-input-wrapper').classList.toggle('hidden', !show)
+    const input = document.getElementById('name-input')
+    const wrapper = document.getElementById('name-input-wrapper')
+    wrapper.classList.toggle('hidden', !show)
+    if (show) {
+      this._pendingName = input.value
+    } else {
+      this._pendingName = ''
+    }
   }
 
   renderLeaderboard(listId, entries, highlightIdx = -1) {
