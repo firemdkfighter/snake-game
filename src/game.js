@@ -57,10 +57,21 @@ export class Game {
     this.tickSpeed = BASE_SPEED
     this.leaderboardEntries = []
     this.nameSubmitted = false
+    this.initSnake()
     this.gameLoop = this.gameLoop.bind(this)
     this.resize = this.resize.bind(this)
     this.handleKey = this.handleKey.bind(this)
     this.init()
+  }
+
+  initSnake() {
+    const midX = Math.floor(COLS / 2)
+    const midY = Math.floor(ROWS / 2)
+    this.snake = [
+      { x: midX, y: midY },
+      { x: midX - 1, y: midY },
+      { x: midX - 2, y: midY },
+    ]
   }
 
   init() {
@@ -244,13 +255,8 @@ export class Game {
     this.tickSpeed = BASE_SPEED
     this.accumulator = 0
 
-    const midX = Math.floor(COLS / 2)
-    const midY = Math.floor(ROWS / 2)
-    this.snake = [
-      { x: midX, y: midY },
-      { x: midX - 1, y: midY },
-      { x: midX - 2, y: midY },
-    ]
+    this.initSnake()
+    this.prevSnake = this.snake.map(s => ({ x: s.x, y: s.y }))
 
     this.food = this.spawnFood()
     document.getElementById('start-overlay').classList.add('hidden')

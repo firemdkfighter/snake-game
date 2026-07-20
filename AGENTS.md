@@ -12,7 +12,7 @@ Browser-based Snake game built with vanilla JavaScript, Vite, and Express.
 
 ## Project structure
 
-```
+```text
 .
 ├── index.html          # Entry point with overlays (start, pause, game over)
 ├── package.json        # Dependencies: express, vite
@@ -61,9 +61,11 @@ Browser-based Snake game built with vanilla JavaScript, Vite, and Express.
 ## Key features
 
 ### Smooth movement
+
 Snake segments interpolate between grid cells each frame using `t = accumulator / tickSpeed`. Previous positions stored in `prevSnake`, updated each tick in `update()`.
 
 ### Leaderboard
+
 - Top 10 scores, stored in `/data/leaderboard.json` on the server.
 - File is obfuscated (XOR with key + Base64) — see `server.js` `obfuscate()`/`deobfuscate()`.
 - API: `GET /api/leaderboard` returns sorted array, `POST /api/leaderboard { name, score }` adds entry.
@@ -72,9 +74,15 @@ Snake segments interpolate between grid cells each frame using `t = accumulator 
 - If score qualifies for top 10, name input appears on game over.
 
 ### Pause
+
 Press `Esc` to toggle pause. Game loop stops, accumulator resets on resume to prevent catch-up ticks. Leaderboard fetched fresh on each pause.
 
+### No animation on restart
+
+When `start()` is called (from game over or start screen), `prevSnake` is reset to match the initial snake positions so the snake snaps to the center immediately without interpolation.
+
 ### Delta capping
+
 `gameLoop` caps delta to `tickSpeed * 3` to prevent large jumps when returning from background tab.
 
 ## API
