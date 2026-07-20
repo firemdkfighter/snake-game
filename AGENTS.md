@@ -1,37 +1,11 @@
-# Snake Game
+# Snake Game — AI Agent Instructions
 
-Browser-based Snake game built with vanilla JavaScript, Vite, and Express.
+## Before starting
 
-## Tech stack
+- Read `README.md` first — it contains all project context (structure, controls, features, API, tech stack).
+- Update `AGENTS.md` or `README.md` as needed when project conventions, structure, or context changes.
 
-- **Frontend**: Vanilla JS, Canvas 2D, CSS
-- **Build**: Vite
-- **Backend**: Node.js / Express (API + static serving)
-- **Container**: Docker, docker-compose
-- **Persistence**: JSON file at `./data/leaderboard.json` (bind-mounted volume), obfuscated via XOR + Base64
-
-## Project structure
-
-```text
-.
-├── index.html          # Entry point with overlays (start, pause, game over)
-├── package.json        # Dependencies: express, vite
-├── vite.config.js      # Vite config (base: './')
-├── server.js           # Express server: static files + leaderboard API
-├── Dockerfile          # Multi-stage: Vite build → Node.js runtime
-├── docker-compose.yml  # Port 8080:80, volume ./data:/data
-├── .gitignore          # node_modules, dist, data
-├── AGENTS.md           # This file
-├── README.md           # Project README
-├── src/
-│   ├── main.js         # Entry point, DOM event wiring
-│   ├── game.js         # Game engine (loop, rendering, collision, leaderboard)
-│   └── style.css       # All styles
-└── data/               # Bind-mounted, NOT committed to git
-    └── leaderboard.json # Obfuscated leaderboard data
-```
-
-## IMPORTANT for AI agents
+## Build & run
 
 - This application MUST be built and run ONLY inside Docker.
 - Do NOT run `npm run dev`, `npm run build`, or `npm run preview` directly on the host.
@@ -40,61 +14,17 @@ Browser-based Snake game built with vanilla JavaScript, Vite, and Express.
 - The game will be available at http://localhost:8080
 - **After making any code changes**, rebuild and restart (`docker compose up -d --build`). Then suggest testing at http://localhost:8080.
 
-## Controls
+## Task tracking
 
-- Arrow keys / WASD to change direction
-- `Esc` to pause / resume
-- Touch/swipe on mobile devices
-- Enter / Space to start or restart
-- Enter to submit name on game over (when input focused)
-- Click "Start Game" / "Play Again" buttons
-
-## Game states
-
-| State | Description |
-|-------|-------------|
-| `START` | Initial screen, shows leaderboard + start button |
-| `PLAYING` | Active gameplay with smooth interpolation |
-| `PAUSED` | Paused via Esc, shows leaderboard |
-| `GAME_OVER` | Collision, shows score + leaderboard + name input if qualifies |
-
-## Key features
-
-### Smooth movement
-
-Snake segments interpolate between grid cells each frame using `t = accumulator / tickSpeed`. Previous positions stored in `prevSnake`, updated each tick in `update()`.
-
-### Leaderboard
-
-- Top 10 scores, stored in `/data/leaderboard.json` on the server.
-- File is obfuscated (XOR with key + Base64) — see `server.js` `obfuscate()`/`deobfuscate()`.
-- API: `GET /api/leaderboard` returns sorted array, `POST /api/leaderboard { name, score }` adds entry.
-- Docker volume `./data:/data` ensures persistence across restarts.
-- Leaderboard shown on start screen, pause screen, and game over screen.
-- If score qualifies for top 10, name input appears on game over.
-
-### Pause
-
-Press `Esc` to toggle pause. Game loop stops, accumulator resets on resume to prevent catch-up ticks. Leaderboard fetched fresh on each pause.
-
-### No animation on restart
-
-When `start()` is called (from game over or start screen), `prevSnake` is reset to match the initial snake positions so the snake snaps to the center immediately without interpolation.
-
-### Delta capping
-
-`gameLoop` caps delta to `tickSpeed * 3` to prevent large jumps when returning from background tab.
-
-## API
-
-| Method | Path | Body | Response |
-|--------|------|------|----------|
-| GET | `/api/leaderboard` | — | `[{ name, score }, ...]` (sorted desc) |
-| POST | `/api/leaderboard` | `{ name, score }` | Updated array (max 10 entries) |
+- Before starting work, read the current task list from `TASKS.md` (create it if it doesn't exist).
+- Write all tasks to `TASKS.md` at the start of a session, organized as a checklist using Markdown checkboxes (`- [ ]` for pending, `- [x]` for completed).
+- Update `TASKS.md` as you complete each task — mark items done, add new tasks discovered during work.
+- Keep the file in sync with the actual state of work at all times.
+- Commit `TASKS.md` alongside code changes when a task is completed.
 
 ## Code style
 
-- No comments in source code unless asked.
+- Comment code by logical blocks — one comment per section explaining the intent.
 - Follow existing patterns (ES modules, `const`/`let`, arrow functions, async/await).
 - CSS: no framework, custom properties, `clamp()` for responsive sizing.
 
@@ -102,7 +32,9 @@ When `start()` is called (from game over or start screen), `prevSnake` is reset 
 
 - `.gitignore` excludes: `node_modules/`, `dist/`, `data/`, `*.log`
 - The `data/` directory is a bind-mounted Docker volume — never commit it.
+- Work on each task in a separate branch (e.g. `feature/description` or `fix/description`).
+- Before starting work on a task, switch to `master`, pull latest changes, create a new branch, and rebase it onto `master`.
 - Commit after each completed task, but only commit what was intended (never secrets or generated files).
-- Before committing, review `git status`, `git diff`, and recent history (`git log --oneline -10`).
+- Before committing, review `git status`, `git diff`, recent history (`git log --oneline -10`), and run lint on changed files.
 - Stage only intended files — never commit secrets or generated files.
 - Write concise commit messages matching the repo style.
