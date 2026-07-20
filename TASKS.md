@@ -10,3 +10,4 @@
 - [x] Align D-pad to bottom-left corner
 - [x] Dynamic UI redraw on window resize
 - [x] Dynamic input mode switching (touch/keyboard) with live hint updates
+- [x] Add GitHub Actions CI (lint, build, Docker)
