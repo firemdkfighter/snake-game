@@ -12,7 +12,7 @@ jobs:
     container:
       image: node:22-alpine
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - run: npm ci
 
@@ -26,6 +26,6 @@ jobs:
       image: docker:28-cli
       options: --volume /var/run/docker.sock:/var/run/docker.sock
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - run: docker build .
