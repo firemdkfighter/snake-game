@@ -5,12 +5,56 @@ export class GameView {
   constructor(canvas) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
+    this.game = null
+    this._inputMode = 'keyboard'
+    this._activeHint = null
     this.setupResize()
     this.resize()
   }
 
+  setInputMode(mode) {
+    this._inputMode = mode
+    if (this.game && this.game.state === 'PLAYING') {
+      document.getElementById('mobile-controls').classList.toggle('hidden', mode !== 'touch')
+      document.getElementById('pause-btn').classList.remove('hidden')
+    }
+    if (this._activeHint) {
+      this._setHint(this._activeHint)
+    }
+  }
+
+  _setHint(key) {
+    this._activeHint = key
+    const hints = {
+      start: [
+        'Swipe or tap arrows to move &middot; Tap ❚❚ to pause &middot; Tap Start to begin',
+        'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to start',
+      ],
+      paused: [
+        'Swipe or tap arrows to move &middot; Tap ❚❚ to resume',
+        'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> or ❚❚ to resume',
+      ],
+      gameOver: [
+        'Swipe or tap arrows to move &middot; Tap ❚❚ to pause &middot; Tap Play Again',
+        'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to play again',
+      ],
+    }
+    const pair = hints[key]
+    if (pair) {
+      document.getElementById('overlay-hint').innerHTML = this._inputMode === 'touch' ? pair[0] : pair[1]
+    }
+  }
+
+  setGame(game) {
+    this.game = game
+  }
+
   setupResize() {
-    this._resizeBound = () => this.resize()
+    let timer
+    this._resizeBound = () => {
+      clearTimeout(timer)
+      timer = setTimeout(() => this.resize(), 100)
+    }
     window.addEventListener('resize', this._resizeBound)
   }
 
@@ -27,7 +71,15 @@ export class GameView {
     this.cellSize = Math.floor(Math.min(this.width / COLS, this.height / ROWS))
     this.offsetX = Math.floor((this.width - this.cellSize * COLS) / 2)
     this.offsetY = Math.floor((this.height - this.cellSize * ROWS) / 2)
-    this.drawBackground(this.ctx, this.cellSize, this.offsetX, this.offsetY)
+    this.redrawGame()
+  }
+
+  redrawGame() {
+    if (!this.game || !this.game.snake) {
+      this.drawBackground(this.ctx, this.cellSize, this.offsetX, this.offsetY)
+      return
+    }
+    this.draw(this.game, 0)
   }
 
   renderStatic(snake, direction) {
@@ -41,14 +93,22 @@ export class GameView {
 
   showPlaying() {
     document.getElementById('overlay').classList.add('hidden')
+    document.getElementById('pause-btn').classList.remove('hidden')
+    document.getElementById('mobile-controls').classList.toggle('hidden', this._inputMode !== 'touch')
+  }
+
+  hideMobileControls() {
+    document.getElementById('mobile-controls').classList.add('hidden')
   }
 
   showStart() {
+    this.hideMobileControls()
+    document.getElementById('pause-btn').classList.add('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
     document.getElementById('overlay-title').textContent = 'Snake'
     document.getElementById('overlay-score-row').classList.add('hidden')
-    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to start'
+    this._setHint('start')
     const btn = document.getElementById('overlay-action-btn')
     btn.textContent = 'Start Game'
     btn.classList.remove('hidden')
@@ -63,18 +123,22 @@ export class GameView {
   }
 
   showPaused(score, highScore) {
+    document.getElementById('mobile-controls').classList.add('hidden')
+    document.getElementById('pause-btn').classList.remove('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
     document.getElementById('overlay-title').textContent = 'Paused'
     document.getElementById('overlay-score-row').classList.remove('hidden')
     document.getElementById('overlay-score').textContent = String(score)
     document.getElementById('overlay-best').textContent = String(highScore)
-    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to resume'
+    this._setHint('paused')
     document.getElementById('overlay-action-btn').classList.add('hidden')
     this.showNameInput(false)
   }
 
   showGameOver(score, highScore, entries, qualifies) {
+    this.hideMobileControls()
+    document.getElementById('pause-btn').classList.add('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
     document.getElementById('overlay-title').textContent = 'Game Over'
@@ -82,7 +146,7 @@ export class GameView {
     document.getElementById('overlay-score').textContent = String(score)
     document.getElementById('overlay-best').textContent = String(highScore)
     this.renderLeaderboard('overlay-leaderboard-list', entries)
-    document.getElementById('overlay-hint').innerHTML = 'Arrow keys / WASD to move &middot; <kbd>Esc</kbd> to pause &middot; Enter / Space to play again'
+    this._setHint('gameOver')
     const btn = document.getElementById('overlay-action-btn')
     btn.textContent = 'Play Again'
     btn.classList.remove('hidden')

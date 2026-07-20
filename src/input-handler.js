@@ -6,7 +6,24 @@ export class InputHandler {
     this.view = view
     this.setupKeyboard()
     this.setupTouch()
+    this.setupMobileControls()
     this.setupButtons()
+    this.setupInputMode()
+  }
+
+  setupInputMode() {
+    let touchTimeout
+    document.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'touch') {
+        clearTimeout(touchTimeout)
+        this.view.setInputMode('touch')
+      }
+    }, { passive: true })
+
+    document.addEventListener('keydown', () => {
+      clearTimeout(touchTimeout)
+      this.view.setInputMode('keyboard')
+    })
   }
 
   setupKeyboard() {
@@ -60,6 +77,26 @@ export class InputHandler {
       e.preventDefault()
       game.setDirection(dir)
     }
+  }
+
+  setupMobileControls() {
+    const game = this.game
+
+    document.querySelectorAll('.dpad-btn').forEach(btn => {
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault()
+        if (game.state === 'PLAYING' || game.state === 'PAUSED') {
+          game.setDirection(btn.dataset.dir)
+        }
+      })
+    })
+
+    document.getElementById('pause-btn').addEventListener('pointerdown', (e) => {
+      e.preventDefault()
+      if (game.state === 'PLAYING' || game.state === 'PAUSED') {
+        game.togglePause()
+      }
+    })
   }
 
   setupTouch() {
