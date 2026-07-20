@@ -327,8 +327,7 @@ export class Game {
       this.score++
       this.tickSpeed = Math.max(60, BASE_SPEED - this.score * SPEED_INCREASE)
       document.getElementById('score-value').textContent = String(this.score)
-    this.prevSnake = this.snake.map(s => ({ x: s.x, y: s.y }))
-    this.food = this.spawnFood()
+      this.food = this.spawnFood()
     } else {
       this.snake.pop()
     }
@@ -337,7 +336,7 @@ export class Game {
   gameLoop(timestamp) {
     if (this.state !== 'PLAYING') return
 
-    const delta = timestamp - this.lastUpdate
+    const delta = Math.min(timestamp - this.lastUpdate, this.tickSpeed * 3)
     this.lastUpdate = timestamp
     this.accumulator += delta
 
