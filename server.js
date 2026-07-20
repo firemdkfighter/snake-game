@@ -33,7 +33,7 @@ app.use(express.static(join(__dirname, 'dist')))
 
 function load() {
   try {
-    if (!existsSync(DATA_FILE)) return []
+    if (!existsSync(DATA_FILE)) {return []}
     const raw = readFileSync(DATA_FILE, 'utf-8')
     return JSON.parse(deobfuscate(raw.trim()))
   } catch {
@@ -42,7 +42,7 @@ function load() {
 }
 
 function save(entries) {
-  if (!existsSync(DATA_DIR)) mkdirSync(DATA_DIR, { recursive: true })
+  if (!existsSync(DATA_DIR)) {mkdirSync(DATA_DIR, { recursive: true })}
   writeFileSync(DATA_FILE, obfuscate(JSON.stringify(entries)))
 }
 
@@ -58,7 +58,7 @@ app.post('/api/leaderboard', (req, res) => {
   const entries = load()
   entries.push({ name: name.trim().slice(0, 20) || 'Player', score })
   entries.sort((a, b) => b.score - a.score)
-  if (entries.length > MAX_LEADERS) entries.length = MAX_LEADERS
+  if (entries.length > MAX_LEADERS) {entries.length = MAX_LEADERS}
   save(entries)
   res.json(entries)
 })
@@ -68,5 +68,5 @@ app.use((_req, res) => {
 })
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+  console.log(`Server running on port ${PORT}`) // eslint-disable-line no-console
 })

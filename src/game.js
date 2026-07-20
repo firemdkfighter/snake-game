@@ -1,24 +1,5 @@
-export const COLS = 20
-export const ROWS = 20
-
-const BASE_SPEED = 150
-const SPEED_INCREASE = 2
-const MIN_SPEED = 60
-const MAX_LEADERS = 10
-
-const DIRS = {
-  UP: { x: 0, y: -1 },
-  DOWN: { x: 0, y: 1 },
-  LEFT: { x: -1, y: 0 },
-  RIGHT: { x: 1, y: 0 },
-}
-
-const OPPOSITE = {
-  UP: 'DOWN',
-  DOWN: 'UP',
-  LEFT: 'RIGHT',
-  RIGHT: 'LEFT',
-}
+import { COLS, ROWS, BASE_SPEED, SPEED_INCREASE, MIN_SPEED, DIRS, OPPOSITE } from './constants.js'
+import { getLeaderboard, submitScore, scoreQualifies } from './api.js'
 
 export class Game {
   constructor() {
@@ -27,14 +8,13 @@ export class Game {
     this.highScore = 0
     this.direction = 'RIGHT'
     this.nextDirection = 'RIGHT'
-    this.lastUpdate = 0
     this.accumulator = 0
     this.tickSpeed = BASE_SPEED
     this.leaderboardEntries = []
     this.nameSubmitted = false
     this.view = null
+    this.loop = null
     this.initSnake()
-    this.gameLoop = this.gameLoop.bind(this)
     this.loadHighScore()
   }
 
@@ -42,7 +22,12 @@ export class Game {
     this.view = view
     if (this.state === 'START') {
       view.showStart()
+      view.renderStatic(this.snake, this.direction)
     }
+  }
+
+  setLoop(loop) {
+    this.loop = loop
   }
 
   initSnake() {
@@ -61,25 +46,19 @@ export class Game {
   }
 
   async loadHighScore() {
-    const entries = await Game.apiGet()
+    const entries = await getLeaderboard()
     this.leaderboardEntries = entries
-    this.updateHighScoreFromEntries(entries)
-  }
-
-  updateHighScoreFromEntries(entries) {
     if (entries.length > 0) {
       this.highScore = entries[0].score
     }
   }
 
-  scoreQualifies(score, entries) {
-    return entries.length < MAX_LEADERS || score > entries[entries.length - 1].score
-  }
-
   async saveScore(name, score) {
-    const entries = await Game.apiPost(name, score)
+    const entries = await submitScore(name, score)
     this.leaderboardEntries = entries
-    this.updateHighScoreFromEntries(entries)
+    if (entries.length > 0) {
+      this.highScore = entries[0].score
+    }
     return entries
   }
 
@@ -96,13 +75,11 @@ export class Game {
     this.direction = 'RIGHT'
     this.nextDirection = 'RIGHT'
     this.tickSpeed = BASE_SPEED
-    this.accumulator = 0
     this.initSnake()
     this.food = this.spawnFood()
     this.view.showPlaying()
     this.view.updateScore(0)
-    this.lastUpdate = performance.now()
-    requestAnimationFrame(this.gameLoop)
+    this.loop.start()
   }
 
   async gameOver() {
@@ -110,10 +87,10 @@ export class Game {
     if (this.score > this.highScore) {
       this.highScore = this.score
     }
-    const entries = await Game.apiGet()
+    const entries = await getLeaderboard()
     this.leaderboardEntries = entries
-    const qualifies = this.score > 0 && this.scoreQualifies(this.score, entries)
-    if (qualifies) this.nameSubmitted = false
+    const qualifies = this.score > 0 && scoreQualifies(this.score, entries)
+    if (qualifies) {this.nameSubmitted = false}
     this.view.showGameOver(this.score, this.highScore, entries, qualifies)
   }
 
@@ -122,7 +99,7 @@ export class Game {
     const free = []
     for (let x = 0; x < COLS; x++) {
       for (let y = 0; y < ROWS; y++) {
-        if (!occupied.has(`${x},${y}`)) free.push({ x, y })
+        if (!occupied.has(`${x},${y}`)) {free.push({ x, y })}
       }
     }
     return free[Math.floor(Math.random() * free.length)]
@@ -158,69 +135,27 @@ export class Game {
     }
   }
 
-  gameLoop(timestamp) {
-    if (this.state !== 'PLAYING') return
-
-    const delta = Math.min(timestamp - this.lastUpdate, this.tickSpeed * 3)
-    this.lastUpdate = timestamp
-    this.accumulator += delta
-
-    while (this.accumulator >= this.tickSpeed) {
-      this.accumulator -= this.tickSpeed
-      this.update()
-      if (this.state !== 'PLAYING') break
-    }
-
-    this.view.draw(this)
-    requestAnimationFrame(this.gameLoop)
-  }
-
   async togglePause() {
     if (this.state === 'PLAYING') {
       this.state = 'PAUSED'
       this.view.showPaused(this.score, this.highScore)
-      const entries = await Game.apiGet()
+      const entries = await getLeaderboard()
       this.view.renderLeaderboard('overlay-leaderboard-list', entries)
     } else if (this.state === 'PAUSED') {
       this.state = 'PLAYING'
       this.view.showPlaying()
-      this.lastUpdate = performance.now()
       this.accumulator = 0
-      requestAnimationFrame(this.gameLoop)
+      this.loop.start()
     }
   }
 
   async submitScore() {
-    if (this.nameSubmitted) return
+    if (this.nameSubmitted) {return}
     this.nameSubmitted = true
     const name = this.view.getNameInput()
     const entries = await this.saveScore(name, this.score)
     const idx = entries.findIndex(e => e.name === name && e.score === this.score)
     this.view.renderLeaderboard('overlay-leaderboard-list', entries, idx >= 0 ? idx : -1)
     this.view.showNameInput(false)
-  }
-
-  static async apiGet() {
-    try {
-      const res = await fetch('/api/leaderboard')
-      if (!res.ok) return []
-      return await res.json()
-    } catch {
-      return []
-    }
-  }
-
-  static async apiPost(name, score) {
-    try {
-      const res = await fetch('/api/leaderboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim().slice(0, 20) || 'Player', score }),
-      })
-      if (!res.ok) return []
-      return await res.json()
-    } catch {
-      return []
-    }
   }
 }

@@ -28,6 +28,10 @@
 - Follow existing patterns (ES modules, `const`/`let`, arrow functions, async/await).
 - CSS: no framework, custom properties, `clamp()` for responsive sizing.
 
+## Lint
+
+- Run `npm run lint` before committing to check for code style issues.
+
 ## Git
 
 - `.gitignore` excludes: `node_modules/`, `dist/`, `data/`, `*.log`

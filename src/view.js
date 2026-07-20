@@ -1,19 +1,11 @@
-import { COLS, ROWS } from './game.js'
-
-const SWIPE_THRESHOLD = 10
-const FOCUS_DELAY = 100
-const HEAD_PAD = 1
-const BODY_PAD = 2
+import { COLS, ROWS, HEAD_PAD, BODY_PAD, FOCUS_DELAY } from './constants.js'
+import { getLeaderboard } from './api.js'
 
 export class GameView {
-  constructor(canvas, game) {
+  constructor(canvas) {
     this.canvas = canvas
     this.ctx = canvas.getContext('2d')
-    this.game = game
     this.setupResize()
-    this.setupKeyboard()
-    this.setupTouch()
-    this.setupButtons()
     this.resize()
   }
 
@@ -35,88 +27,16 @@ export class GameView {
     this.cellSize = Math.floor(Math.min(this.width / COLS, this.height / ROWS))
     this.offsetX = Math.floor((this.width - this.cellSize * COLS) / 2)
     this.offsetY = Math.floor((this.height - this.cellSize * ROWS) / 2)
-    this.draw(this.game)
+    this.drawBackground(this.ctx, this.cellSize, this.offsetX, this.offsetY)
   }
 
-  setupKeyboard() {
-    document.addEventListener('keydown', (e) => this.handleKey(e))
-  }
-
-  handleKey(e) {
-    const game = this.game
-
-    if (game.state === 'PLAYING' || game.state === 'PAUSED') {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        game.togglePause()
-        return
-      }
+  renderStatic(snake, direction) {
+    const ctx = this.ctx
+    ctx.clearRect(0, 0, this.width, this.height)
+    this.drawBackground(ctx, this.cellSize, this.offsetX, this.offsetY)
+    if (snake) {
+      this.drawSnake(ctx, { snake, prevSnake: snake, direction }, 0, this.cellSize, this.offsetX, this.offsetY)
     }
-
-    if (game.state === 'PAUSED') return
-
-    if (game.state === 'GAME_OVER') {
-      const input = document.getElementById('name-input')
-      if (document.activeElement === input) {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-          game.submitScore()
-        }
-        return
-      }
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        game.start()
-      }
-      return
-    }
-
-    if (game.state === 'START') {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        game.start()
-      }
-      return
-    }
-
-    const keyMap = {
-      ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT',
-      w: 'UP', s: 'DOWN', a: 'LEFT', d: 'RIGHT',
-      W: 'UP', S: 'DOWN', A: 'LEFT', D: 'RIGHT',
-    }
-
-    const dir = keyMap[e.key]
-    if (dir) {
-      e.preventDefault()
-      game.setDirection(dir)
-    }
-  }
-
-  setupTouch() {
-    let touchStart = null
-    this.canvas.addEventListener('touchstart', (e) => {
-      const t = e.touches[0]
-      touchStart = { x: t.clientX, y: t.clientY }
-    }, { passive: true })
-
-    this.canvas.addEventListener('touchend', (e) => {
-      if (!touchStart) return
-      const t = e.changedTouches[0]
-      const dx = t.clientX - touchStart.x
-      const dy = t.clientY - touchStart.y
-      touchStart = null
-      if (Math.abs(dx) < SWIPE_THRESHOLD && Math.abs(dy) < SWIPE_THRESHOLD) return
-      if (Math.abs(dx) > Math.abs(dy)) {
-        this.game.setDirection(dx > 0 ? 'RIGHT' : 'LEFT')
-      } else {
-        this.game.setDirection(dy > 0 ? 'DOWN' : 'UP')
-      }
-    }, { passive: true })
-  }
-
-  setupButtons() {
-    document.getElementById('overlay-action-btn').addEventListener('click', () => this.game.start())
-    document.getElementById('save-score-btn').addEventListener('click', () => this.game.submitScore())
   }
 
   showPlaying() {
@@ -133,15 +53,13 @@ export class GameView {
     btn.textContent = 'Start Game'
     btn.classList.remove('hidden')
     this.showNameInput(false)
-    this.fetchAndRenderLeaderboard()
+    this.renderLeaderboard('overlay-leaderboard-list', [])
+    this.loadLeaderboard()
   }
 
-  async fetchAndRenderLeaderboard() {
-    try {
-      const res = await fetch('/api/leaderboard')
-      const entries = res.ok ? await res.json() : []
-      this.renderLeaderboard('overlay-leaderboard-list', entries)
-    } catch {}
+  async loadLeaderboard() {
+    const entries = await getLeaderboard()
+    this.renderLeaderboard('overlay-leaderboard-list', entries)
   }
 
   showPaused(score, highScore) {
@@ -191,28 +109,28 @@ export class GameView {
 
   renderLeaderboard(listId, entries, highlightIdx = -1) {
     const listEl = document.getElementById(listId)
-    if (!listEl) return
+    if (!listEl) {return}
     listEl.innerHTML = ''
     entries.forEach((entry, i) => {
       const li = document.createElement('li')
-      if (i === highlightIdx) li.className = 'lb-current'
+      if (i === highlightIdx) {li.className = 'lb-current'}
       li.innerHTML = `<span class="lb-name">${this.escapeHtml(entry.name)}</span><span class="lb-score">${entry.score}</span>`
       listEl.appendChild(li)
     })
   }
 
-  draw(game) {
+  draw(game, t) {
     const ctx = this.ctx
     const { width, height, cellSize, offsetX, offsetY } = this
     ctx.clearRect(0, 0, width, height)
-    this.drawBackground(ctx, width, height, cellSize, offsetX, offsetY)
-    if (game.snake) this.drawSnake(ctx, game, cellSize, offsetX, offsetY)
-    if (game.food) this.drawFood(ctx, game.food, cellSize, offsetX, offsetY)
+    this.drawBackground(ctx, cellSize, offsetX, offsetY)
+    if (game.snake) {this.drawSnake(ctx, game, t, cellSize, offsetX, offsetY)}
+    if (game.food) {this.drawFood(ctx, game.food, cellSize, offsetX, offsetY)}
   }
 
-  drawBackground(ctx, width, height, cellSize, offsetX, offsetY) {
+  drawBackground(ctx, cellSize, offsetX, offsetY) {
     ctx.fillStyle = '#1a1a2e'
-    ctx.fillRect(0, 0, width, height)
+    ctx.fillRect(0, 0, this.width, this.height)
 
     ctx.fillStyle = '#16213e'
     for (let x = 0; x < COLS; x++) {
@@ -224,8 +142,7 @@ export class GameView {
     }
   }
 
-  drawSnake(ctx, game, cellSize, offsetX, offsetY) {
-    const t = game.tickSpeed > 0 ? Math.min(game.accumulator / game.tickSpeed, 1) : 0
+  drawSnake(ctx, game, t, cellSize, offsetX, offsetY) {
     game.snake.forEach((seg, i) => {
       const isHead = i === 0
       const pad = isHead ? HEAD_PAD : BODY_PAD
@@ -251,7 +168,7 @@ export class GameView {
       )
       ctx.shadowBlur = 0
 
-      if (isHead) this.drawSnakeEyes(ctx, game, px, py, cellSize, offsetX, offsetY)
+      if (isHead) {this.drawSnakeEyes(ctx, game, px, py, cellSize, offsetX, offsetY)}
     })
   }
 

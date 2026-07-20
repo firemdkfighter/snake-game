@@ -60,8 +60,12 @@ Top 10 scores are persisted on the server at `/data/leaderboard.json` (Docker bi
 ├── AGENTS.md           # AI agent instructions
 ├── README.md           # This file
 ├── src/
-│   ├── main.js         # Entry point, DOM event wiring
-│   ├── game.js         # Game engine (loop, rendering, collision, leaderboard)
+│   ├── main.js         # Entry point, dependency injection
+│   ├── game.js         # Game model (state, snake, collision, scoring)
+│   ├── game-loop.js    # Game loop (requestAnimationFrame, fixed timestep)
+│   ├── input-handler.js # Keyboard and touch input handling
+│   ├── view.js         # Canvas rendering and DOM overlay management
+│   ├── api.js          # Leaderboard API client (fetch wrapper)
 │   └── style.css       # All styles
 └── data/               # Bind-mounted, NOT committed to git
     └── leaderboard.json # Obfuscated leaderboard data
