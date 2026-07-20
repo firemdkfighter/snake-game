@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  snake-game:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./game-snapshots:/game-snapshots
+    container_name: snake-game
+    restart: unless-stopped
