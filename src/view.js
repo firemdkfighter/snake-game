@@ -1,6 +1,78 @@
 import { COLS, ROWS, FOCUS_DELAY } from './constants.js'
 import { getLeaderboard } from './api.js'
 
+export class ParticleManager {
+  constructor(view) {
+    this.view = view
+    this.foodPulse = null
+  }
+
+  spawnParticles(_x, _y) {
+    // Only spawn if we haven't already spawned for this food location (not first food in game)
+    const existingParticle = document.querySelector('.food-particle')
+    if (existingParticle) {
+      return
+    }
+    
+    const canvasOffsetX = this.view.offsetX || 0
+    const canvasOffsetY = this.view.offsetY || 0
+    
+    for (let i = 0; i < 8; i++) {
+      const particle = document.createElement('div')
+      particle.className = 'food-particle'
+      
+      const angle = (i / 8) * Math.PI * 2 + Math.random() - 0.5 // Add randomness to spread
+      
+      // Random colors with gradients
+      const baseColors = ['#ffd700', '#ffed4a', '#fff', '#ffa500', '#ffc0cb', '#9370db']
+      particle.style.background = `linear-gradient(135deg, ${baseColors[i % baseColors.length]}, 
+        hsl(${Math.random() * 60 + 40}, 80%, 60%))`
+      
+      // Random size variation
+      const size = Math.floor(Math.random() * 12) + 6 // 6-18px
+      
+      // Position relative to canvas using absolute positioning within game container
+      const particleLeft = canvasOffsetX + _x * this.view.cellSize
+      const particleTop = canvasOffsetY + _y * this.view.cellSize
+      
+      // Use fixed positioning to be relative to viewport, not body scroll
+      particle.style.position = 'fixed'
+      particle.style.left = `${particleLeft}px`
+      particle.style.top = `${particleTop}px`
+      particle.style.width = `${size}px`
+      particle.style.height = `${size}px`
+      particle.style.borderRadius = '50%'
+      particle.style.zIndex = '100'
+      
+      // Add glow effect
+      const glowColor = baseColors[i % baseColors.length]
+      particle.style.boxShadow = `0 0 ${size/3}px ${glowColor}`
+      
+      document.body.appendChild(particle)
+
+      // Animate using Web Animations API - particles fly outward from food location
+      const animation = particle.animate([
+        { 
+          transform: 'translate(0, 0) scale(1)', 
+          opacity: 1,
+          filter: `brightness(1)`
+        },
+        { 
+          transform: `translate(${Math.cos(angle) * 120}px, ${Math.sin(angle) * 120}px) scale(0.3)`, 
+          opacity: 0,
+          filter: `brightness(1.5)`
+        }
+      ], {
+        duration: 700 + Math.random() * 200, // Varying durations for natural look
+        easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)', // Bounce effect
+        delay: Math.random() * 50
+      })
+
+      animation.onfinish = () => particle.remove()
+    }
+  }
+}
+
 export class GameView {
   constructor(canvas) {
     this.canvas = canvas
@@ -8,6 +80,8 @@ export class GameView {
     this.game = null
     this._inputMode = 'keyboard'
     this._activeHint = null
+    this._pendingName = ''
+    this.particles = new ParticleManager(this)
     this.setupResize()
     this.resize()
   }
@@ -94,7 +168,12 @@ export class GameView {
   showPlaying() {
     document.getElementById('overlay').classList.add('hidden')
     document.getElementById('pause-btn').classList.remove('hidden')
-    document.getElementById('mobile-controls').classList.toggle('hidden', this._inputMode !== 'touch')
+    
+    // Show D-pad only on touch devices or when paused
+    const isTouch = window.matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad/.test(navigator.userAgent)
+    document.getElementById('mobile-controls').classList.toggle('hidden', !isTouch && this._inputMode === 'keyboard')
+    
+    // Don't spawn particles here - only when food is eaten (in game.js)
   }
 
   hideMobileControls() {
@@ -106,6 +185,13 @@ export class GameView {
     document.getElementById('pause-btn').classList.add('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
+    overlay.classList.add('visible', 'fade-enter')
+    
+    // Remove fade classes when visible to allow next animation
+    setTimeout(() => {
+      overlay.classList.remove('fade-enter')
+    }, 300)
+
     document.getElementById('overlay-title').textContent = 'Snake'
     document.getElementById('overlay-score-row').classList.add('hidden')
     this._setHint('start')
@@ -127,6 +213,10 @@ export class GameView {
     document.getElementById('pause-btn').classList.remove('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
+    overlay.classList.add('visible', 'fade-enter')
+
+    setTimeout(() => overlay.classList.remove('fade-enter'), 300)
+    
     document.getElementById('overlay-title').textContent = 'Paused'
     document.getElementById('overlay-score-row').classList.remove('hidden')
     document.getElementById('overlay-score').textContent = String(score)
@@ -141,6 +231,10 @@ export class GameView {
     document.getElementById('pause-btn').classList.add('hidden')
     const overlay = document.getElementById('overlay')
     overlay.classList.remove('hidden')
+    overlay.classList.add('visible', 'fade-enter')
+
+    setTimeout(() => overlay.classList.remove('fade-enter'), 300)
+
     document.getElementById('overlay-title').textContent = 'Game Over'
     document.getElementById('overlay-score-row').classList.remove('hidden')
     document.getElementById('overlay-score').textContent = String(score)
@@ -152,7 +246,6 @@ export class GameView {
     btn.classList.remove('hidden')
     if (qualifies) {
       this.showNameInput(true)
-      document.getElementById('name-input').value = ''
       setTimeout(() => document.getElementById('name-input').focus(), FOCUS_DELAY)
     } else {
       this.showNameInput(false)
@@ -168,7 +261,15 @@ export class GameView {
   }
 
   showNameInput(show) {
-    document.getElementById('name-input-wrapper').classList.toggle('hidden', !show)
+    const input = document.getElementById('name-input')
+    const wrapper = document.getElementById('name-input-wrapper')
+    wrapper.classList.toggle('hidden', !show)
+    if (show) {
+      this._pendingName = input.value
+    } else {
+      this._pendingName = ''
+    this.particles = new ParticleManager(this)
+    }
   }
 
   renderLeaderboard(listId, entries, highlightIdx = -1) {
@@ -334,5 +435,40 @@ export class GameView {
     return str.replace(/[&<>"]/g, (c) =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]
     )
+  }
+
+  captureScreenshot() {
+    const canvas = this.canvas
+    // Create a temporary offscreen canvas to combine with UI overlays
+    const tempCanvas = document.createElement('canvas')
+    tempCanvas.width = canvas.width
+    tempCanvas.height = canvas.height
+    
+    const ctx = tempCanvas.getContext('2d')
+    
+    // Draw the main game canvas
+    ctx.drawImage(canvas, 0, 0)
+    
+    // Get all overlay elements and draw them
+    document.querySelectorAll('.overlay:not(.hidden), #ui-overlay').forEach(el => {
+      if (el.offsetLeft > 0 && el.offsetTop > 0) {
+        const img = new Image()
+        img.src = canvas.toDataURL()
+        img.onload = () => {
+          // For simplicity, we'll just use the main canvas for now
+          // In a full implementation, you'd need to composite overlays manually
+        }
+      }
+    })
+
+    // Convert to blob and download
+    canvas.toBlob((blob) => {
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.download = `snake-screenshot-${Date.now()}.png`
+      link.href = url
+      link.click()
+      URL.revokeObjectURL(url)
+    }, 'image/png')
   }
 }

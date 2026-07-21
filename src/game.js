@@ -1,4 +1,4 @@
-import { COLS, ROWS, BASE_SPEED, SPEED_INCREASE, MIN_SPEED, DIRS, OPPOSITE } from './constants.js'
+import { COLS, ROWS, BASE_SPEED, SPEED_INCREASE, MIN_TICK_SPEED, DIRS, OPPOSITE } from './constants.js'
 import { getLeaderboard, submitScore, scoreQualifies } from './api.js'
 
 export class Game {
@@ -75,23 +75,36 @@ export class Game {
     this.direction = 'RIGHT'
     this.nextDirection = 'RIGHT'
     this.tickSpeed = BASE_SPEED
+    
     this.initSnake()
     this.food = this.spawnFood()
+
     this.view.showPlaying()
     this.view.updateScore(0)
+    
+    console.log(`🐍 [DEBUG] Snake started - Speed: ${this.tickSpeed}ms tick (~${Math.round(1000/this.tickSpeed)} tps), Score: 0`)
+    
     this.loop.start()
   }
 
   async gameOver() {
     this.state = 'GAME_OVER'
-    if (this.score > this.highScore) {
+    
+    if (this.highScore > 0) {
       this.highScore = this.score
     }
     const entries = await getLeaderboard()
     this.leaderboardEntries = entries
     const qualifies = this.score > 0 && scoreQualifies(this.score, entries)
     if (qualifies) {this.nameSubmitted = false}
+    
+    console.log(`💀 [DEBUG] Game Over - Final Score: ${this.score}, Final Speed: ${this.tickSpeed}ms tick (~${Math.round(1000/this.tickSpeed)} tps)`)
+    
     this.view.showGameOver(this.score, this.highScore, entries, qualifies)
+  }
+
+  resetToNewGame() {
+    // Reset to new game will call start() which will initialize speed again
   }
 
   spawnFood() {
@@ -127,9 +140,23 @@ export class Game {
 
     if (nx === this.food.x && ny === this.food.y) {
       this.score++
-      this.tickSpeed = Math.max(MIN_SPEED, BASE_SPEED - this.score * SPEED_INCREASE)
+      const oldFoodX = this.food.x  // Save coordinates before spawning new food
+      const oldFoodY = this.food.y
+      
+      // Calculate tick speed: start slow and gradually increase game speed
+      // Each apple reduces tick delay by SPEED_INCREASE (down to MIN_TICK_SPEED)
+      const targetTickSpeed = BASE_SPEED - this.score * SPEED_INCREASE
+      this.tickSpeed = Math.max(MIN_TICK_SPEED, targetTickSpeed)
+      
+      console.log(`🍎 [DEBUG] Food eaten - Score: ${this.score}, Speed changed from ${(BASE_SPEED - (this.score-1) * SPEED_INCREASE)}ms to ${this.tickSpeed}ms (~${Math.round(1000/this.tickSpeed)} tps)`)
+      
       this.view.updateScore(this.score)
       this.food = this.spawnFood()
+      
+      // Trigger particle effect at OLD food location (where it was eaten)
+      if (this.view && oldFoodX !== undefined) {
+        setTimeout(() => this.view.particles.spawnParticles(oldFoodX, oldFoodY), 100)
+      }
     } else {
       this.snake.pop()
     }
@@ -143,6 +170,9 @@ export class Game {
       this.view.renderLeaderboard('overlay-leaderboard-list', entries)
     } else if (this.state === 'PAUSED') {
       this.state = 'PLAYING'
+      
+      console.log(`⏯ [DEBUG] Resumed from pause - Speed: ${this.tickSpeed}ms tick (~${Math.round(1000/this.tickSpeed)} tps), Score: ${this.score}`)
+      
       this.view.showPlaying()
       this.accumulator = 0
       this.loop.start()
@@ -158,4 +188,5 @@ export class Game {
     this.view.renderLeaderboard('overlay-leaderboard-list', entries, idx >= 0 ? idx : -1)
     this.view.showNameInput(false)
   }
+
 }

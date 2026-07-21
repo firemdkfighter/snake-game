@@ -2,8 +2,8 @@ export const COLS = 20
 export const ROWS = 20
 
 export const BASE_SPEED = 150
-export const SPEED_INCREASE = 2
-export const MIN_SPEED = 60
+export const SPEED_INCREASE = 3
+export const MIN_TICK_SPEED = 40
 export const MAX_LEADERS = 10
 
 export const DIRS = {
@@ -24,3 +24,4 @@ export const SWIPE_THRESHOLD = 10
 export const FOCUS_DELAY = 100
 export const HEAD_PAD = 1
 export const BODY_PAD = 2
+export const MAX_SPEED = 300

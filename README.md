@@ -8,7 +8,7 @@ Browser-based Snake game built with vanilla JavaScript, Canvas 2D, and Vite, ser
 docker compose up -d --build
 ```
 
-Open http://localhost:8080
+Open <http://localhost:8080>
 
 ## Stop
 
@@ -69,34 +69,6 @@ Top 10 scores are persisted on the server at `/data/leaderboard.json` (Docker bi
 │   └── style.css       # All styles
 └── data/               # Bind-mounted, NOT committed to git
     └── leaderboard.json # Obfuscated leaderboard data
-```
-
-## Features
-
-### Smooth movement
-
-Snake segments interpolate between grid cells each frame using `t = accumulator / tickSpeed`. Previous positions stored in `prevSnake`, updated each tick in `update()`.
-
-### Pause
-
-Press `Esc` to toggle pause. Game loop stops, accumulator resets on resume to prevent catch-up ticks. Leaderboard fetched fresh on each pause.
-
-### No animation on restart
-
-When `start()` is called (from game over or start screen), `prevSnake` is reset to match the initial snake positions so the snake snaps to the center immediately without interpolation.
-
-### Delta capping
-
-`gameLoop` caps delta to `tickSpeed * 3` to prevent large jumps when returning from background tab.
-
-## Development
-
-```bash
-# Build and run in Docker (do NOT run directly on host)
-docker compose up -d --build
-
-# Rebuild after changes
-docker compose up -d --build
 ```
 
 ## Tech stack
